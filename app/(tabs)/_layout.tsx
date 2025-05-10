@@ -23,7 +23,7 @@ const TabBarIcon: React.FC<TabBarIconProps> = ({
   if (focused) {
     return (
       <View
-        className="flex flex-row w-full flex-1 min-w-[112px] min-h-16 mt-4 
+        className="flex flex-col w-full flex-1 min-w-[112px] min-h-16 mt-4
         justify-center items-center rounded-full overflow-hidden bg-primary/20"
       >
         <Icon name={name} size={size} color={color} />

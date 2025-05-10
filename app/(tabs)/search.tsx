@@ -1,3 +1,4 @@
+// app/(tabs)/search.tsx
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -9,17 +10,43 @@ import {
   Image,
   StatusBar,
 } from "react-native";
-import { useRouter } from "expo-router";
-import { useInventory, InventoryItem } from "@/context/InventoryContext";
+import { useRouter, useFocusEffect } from "expo-router";
+import { useInventoryItems, InventoryItem } from "@/services/inventoryService";
 import { Icon } from "@/constants/ionIcons";
 import { images } from "@/constants/images";
 
-const SearchScreen = () => {
+const SearchScreen: React.FC = () => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<InventoryItem[]>([]);
-  const { searchItems } = useInventory();
+  const { data: items = [] } = useInventoryItems();
   const router = useRouter();
 
+  useFocusEffect(
+    React.useCallback(() => {
+      setQuery("");
+      setResults([]);
+
+      return () => {};
+    }, [])
+  );
+
+  const searchItems = React.useCallback(
+    (searchQuery: string): InventoryItem[] => {
+      if (!searchQuery.trim()) return [];
+
+      const normalizedQuery = searchQuery.toLowerCase().trim();
+
+      return items.filter(
+        (item) =>
+          item.name.toLowerCase().includes(normalizedQuery) ||
+          item.barcode.includes(normalizedQuery) ||
+          item.category.toLowerCase().includes(normalizedQuery)
+      );
+    },
+    [items]
+  );
+
+  // Обновляем результаты поиска при изменении запроса
   useEffect(() => {
     if (query.trim().length > 0) {
       setResults(searchItems(query));
@@ -33,17 +60,6 @@ const SearchScreen = () => {
       className="bg-white rounded-xl mx-3 mb-3 p-3 shadow-sm flex-row"
       onPress={() => router.push(`/item/${item.id}`)}
     >
-      <View className="w-12 h-12 bg-gray-100 rounded-lg items-center justify-center mr-3">
-        {item.image ? (
-          <Image
-            source={{ uri: item.image }}
-            className="w-full h-full rounded-lg"
-          />
-        ) : (
-          <Icon name="package" size={24} color="#6B7280" />
-        )}
-      </View>
-
       <View className="flex-1 justify-center">
         <Text className="text-base font-medium text-gray-800">{item.name}</Text>
         <View className="flex-row items-center mt-1">
@@ -97,6 +113,12 @@ const SearchScreen = () => {
     </View>
   );
 
+  // Очистка поиска
+  const clearSearch = () => {
+    setQuery("");
+    setResults([]);
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-[#F5F7FA]">
       <StatusBar barStyle="dark-content" backgroundColor="#F5F7FA" />
@@ -124,7 +146,7 @@ const SearchScreen = () => {
             autoFocus={false}
           />
           {query.length > 0 && (
-            <TouchableOpacity onPress={() => setQuery("")}>
+            <TouchableOpacity onPress={clearSearch}>
               <Icon name="close" size={20} color="#9CA3AF" />
             </TouchableOpacity>
           )}
@@ -134,7 +156,7 @@ const SearchScreen = () => {
       <FlatList
         data={results}
         renderItem={renderItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id || item.$id!}
         contentContainerStyle={{ paddingBottom: 100 }}
         ListEmptyComponent={renderEmptyResults}
       />

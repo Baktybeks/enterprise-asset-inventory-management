@@ -1,18 +1,19 @@
-import React, { useState, useEffect } from "react";
+// app/(tabs)/dashboard.tsx
+import React, { useMemo } from "react";
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
-  Image,
   StatusBar,
   Dimensions,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { Icon } from "@/constants/ionIcons";
 import { getCategoryColor } from "@/constants/colors";
+import { useInventoryItems, InventoryItem } from "@/services/inventoryService";
 
 const { width } = Dimensions.get("window");
 
@@ -23,21 +24,17 @@ interface CategoryStat {
   items: InventoryItem[];
 }
 
-const DashboardScreen = () => {
-  const { items } = useInventory();
-  const [totalValue, setTotalValue] = useState(0);
-  const [categoryStats, setCategoryStats] = useState<CategoryStat[]>([]);
-  const [lowStockItems, setLowStockItems] = useState<InventoryItem[]>([]);
+const DashboardScreen: React.FC = () => {
+  const { data: items = [], isLoading, error } = useInventoryItems();
   const router = useRouter();
 
-  useEffect(() => {
-    if (items.length > 0) {
+  const { totalValue, categoryStats, lowStockItems, totalItems } =
+    useMemo(() => {
       const total = items.reduce(
         (sum, item) => sum + item.price * item.quantity,
         0
       );
-      setTotalValue(total);
-
+      const totalCount = items.reduce((sum, item) => sum + item.quantity, 0);
       const categories: Record<string, CategoryStat> = {};
       items.forEach((item) => {
         const category = item.category || "Без категории";
@@ -58,15 +55,47 @@ const DashboardScreen = () => {
       const sortedCategories = Object.values(categories).sort(
         (a, b) => b.value - a.value
       );
-      setCategoryStats(sortedCategories);
 
       const lowStock = items
         .filter((item) => item.quantity < 5)
         .sort((a, b) => a.quantity - b.quantity);
 
-      setLowStockItems(lowStock);
-    }
-  }, [items]);
+      return {
+        totalValue: total,
+        categoryStats: sortedCategories,
+        lowStockItems: lowStock,
+        totalItems: totalCount,
+      };
+    }, [items]);
+
+  if (isLoading) {
+    return (
+      <SafeAreaView className="flex-1 justify-center items-center bg-[#F5F7FA]">
+        <ActivityIndicator size="large" color="#5B67CA" />
+        <Text className="mt-4 text-gray-600">Загрузка данных...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView className="flex-1 justify-center items-center bg-[#F5F7FA] p-4">
+        <Icon name="alert" size={50} color="#EF4444" />
+        <Text className="mt-4 text-gray-800 font-medium text-lg text-center">
+          Не удалось загрузить данные
+        </Text>
+        <Text className="mt-2 text-gray-600 text-center">
+          Проверьте подключение к интернету и попробуйте снова
+        </Text>
+        <TouchableOpacity
+          className="mt-6 bg-primary px-6 py-3 rounded-lg"
+          onPress={() => window.location.reload()}
+        >
+          <Text className="text-white font-medium">Обновить</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-[#F5F7FA]">
@@ -97,9 +126,7 @@ const DashboardScreen = () => {
 
           <View className="flex-row mt-1 items-center">
             <Text className="text-gray-500">Всего единиц:</Text>
-            <Text className="ml-1 font-medium text-gray-800">
-              {items.reduce((sum, item) => sum + item.quantity, 0)}
-            </Text>
+            <Text className="ml-1 font-medium text-gray-800">{totalItems}</Text>
           </View>
         </View>
 
@@ -108,58 +135,72 @@ const DashboardScreen = () => {
             <Text className="text-lg font-bold text-gray-800">Категории</Text>
           </View>
 
-          {categoryStats.map((category, index) => {
-            const categoryColor = getCategoryColor(category.name);
-            const percentage =
-              totalValue > 0 ? (category.value / totalValue) * 100 : 0;
+          {categoryStats.length === 0 ? (
+            <View className="bg-white rounded-xl mx-4 p-4 items-center py-6 shadow-sm">
+              <Icon
+                name="information-circle"
+                size={40}
+                color="#9CA3AF"
+                style={{ marginBottom: 8 }}
+              />
+              <Text className="text-gray-500 text-center">
+                Нет информации о категориях
+              </Text>
+            </View>
+          ) : (
+            categoryStats.map((category, index) => {
+              const categoryColor = getCategoryColor(category.name);
+              const percentage =
+                totalValue > 0 ? (category.value / totalValue) * 100 : 0;
 
-            return (
-              <TouchableOpacity
-                key={index}
-                className="bg-white rounded-xl mx-4 mb-3 p-4 shadow-sm"
-                onPress={() => {
-                  router.push({
-                    pathname: "/",
-                    params: { category: category.name },
-                  });
-                }}
-              >
-                <View className="flex-row justify-between items-center mb-2">
-                  <View className="flex-row items-center">
-                    <View
-                      style={{ backgroundColor: categoryColor }}
-                      className="w-3 h-3 rounded-full mr-2"
-                    />
-                    <Text className="font-medium text-gray-800">
-                      {category.name}
+              return (
+                <TouchableOpacity
+                  key={index}
+                  className="bg-white rounded-xl mx-4 mb-3 p-4 shadow-sm"
+                  onPress={() => {
+                    router.push({
+                      pathname: "/",
+                      params: { category: category.name },
+                    });
+                  }}
+                >
+                  <View className="flex-row justify-between items-center mb-2">
+                    <View className="flex-row items-center">
+                      <View
+                        style={{ backgroundColor: categoryColor }}
+                        className="w-3 h-3 rounded-full mr-2"
+                      />
+                      <Text className="font-medium text-gray-800">
+                        {category.name}
+                      </Text>
+                    </View>
+                    <Text className="text-gray-500 text-sm">
+                      {category.count} шт.
                     </Text>
                   </View>
-                  <Text className="text-gray-500 text-sm">
-                    {category.count} шт.
-                  </Text>
-                </View>
 
-                <View className="bg-gray-200 h-2 rounded-full overflow-hidden mb-1">
-                  <View
-                    style={{
-                      width: `${Math.min(100, percentage)}%`,
-                      backgroundColor: categoryColor,
-                    }}
-                    className="h-full rounded-full"
-                  />
-                </View>
+                  <View className="bg-gray-200 h-2 rounded-full overflow-hidden mb-1">
+                    <View
+                      style={{
+                        width: `${Math.min(100, percentage)}%`,
+                        backgroundColor: categoryColor,
+                      }}
+                      className="h-full rounded-full"
+                    />
+                  </View>
 
-                <View className="flex-row justify-between items-center">
-                  <Text className="text-sm text-gray-500">
-                    {percentage.toFixed(1)}%
-                  </Text>
-                  <Text className="text-sm font-medium text-gray-800">
-                    {category.value.toLocaleString()} ₽
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
+                  <View className="flex-row justify-between items-center">
+                    <Text className="text-sm text-gray-500">
+                      {percentage.toFixed(1)}%
+                    </Text>
+                    <Text className="text-sm font-medium text-gray-800">
+                      {category.value.toLocaleString()} ₽
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })
+          )}
         </View>
         <View className="mt-4 mb-24">
           <View className="flex-row justify-between items-center px-4 mb-2">
@@ -195,17 +236,6 @@ const DashboardScreen = () => {
                 onPress={() => router.push(`/item/${item.id}`)}
               >
                 <View className="flex-row items-center">
-                  <View className="w-10 h-10 bg-gray-100 rounded-lg items-center justify-center mr-3">
-                    {item.image ? (
-                      <Image
-                        source={{ uri: item.image }}
-                        className="w-full h-full rounded-lg"
-                      />
-                    ) : (
-                      <Icon name="package" size={24} color="#6B7280" />
-                    )}
-                  </View>
-
                   <View className="flex-1">
                     <Text className="font-medium text-gray-800">
                       {item.name}

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+// app/(tabs)/index.tsx
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -8,61 +9,58 @@ import {
   Alert,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useInventory } from "@/context/InventoryContext";
+import {
+  useInventoryItems,
+  useDeleteInventoryItem,
+  InventoryItem,
+} from "@/services/inventoryService";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
+import { Icon } from "@/constants/ionIcons";
 import * as Haptics from "expo-haptics";
-
-type InventoryItem = {
-  id: string;
-  name: string;
-  barcode: string;
-  image?: string;
-  category: string;
-  price: number;
-  quantity: number;
-};
 
 type InventoryCardProps = {
   item: InventoryItem;
+  onDelete: (id: string, name: string) => void;
+  onEdit: (id: string) => void;
+  onPress: (id: string) => void;
 };
 
 const InventoryScreen = () => {
-  const { items, loading, deleteItem } = useInventory();
+  const { data: items = [], isLoading: loading, refetch } = useInventoryItems();
+  const deleteItemMutation = useDeleteInventoryItem();
+
   const [refreshing, setRefreshing] = useState(false);
-  const [filteredItems, setFilteredItems] = useState(items);
   const [activeFilter, setActiveFilter] = useState("Все");
   const router = useRouter();
   const params = useLocalSearchParams();
   const categoryFromParams = params.category as string | undefined;
 
-  const categories = [
-    "Все",
-    ...Array.from(new Set(items.map((item) => item.category))),
-  ];
+  const categories = useMemo(() => {
+    return ["Все", ...Array.from(new Set(items.map((item) => item.category)))];
+  }, [items]);
 
   useEffect(() => {
     if (categoryFromParams && categories.includes(categoryFromParams)) {
       setActiveFilter(categoryFromParams);
     }
-  }, [categoryFromParams]);
+  }, [categoryFromParams, categories]);
 
-  useEffect(() => {
+  const filteredItems = useMemo(() => {
     if (activeFilter === "Все") {
-      setFilteredItems(items);
+      return items;
     } else {
-      setFilteredItems(items.filter((item) => item.category === activeFilter));
+      return items.filter((item) => item.category === activeFilter);
     }
   }, [items, activeFilter]);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    setTimeout(() => {
+    try {
+      await refetch();
+    } finally {
       setRefreshing(false);
-    }, 1000);
+    }
   };
-
   const confirmDelete = (id: string, name: string) => {
     Alert.alert(
       "Удаление товара",
@@ -74,42 +72,47 @@ const InventoryScreen = () => {
           style: "destructive",
           onPress: async () => {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            await deleteItem(id);
+            try {
+              await deleteItemMutation.mutateAsync(id);
+            } catch (error) {
+              console.error("Ошибка при удалении товара:", error);
+              Alert.alert("Ошибка", "Не удалось удалить товар");
+            }
           },
         },
       ]
     );
   };
 
-  const InventoryCard: React.FC<InventoryCardProps> = ({ item }) => (
+  const handlePress = (id: string) => {
+    Haptics.selectionAsync();
+    router.push(`/item/${id}`);
+  };
+
+  const handleEdit = (id: string) => {
+    Haptics.selectionAsync();
+    router.push(`/item/${id}?edit=true`);
+  };
+
+  const ItemCard = ({
+    item,
+    onDelete,
+    onEdit,
+    onPress,
+  }: InventoryCardProps) => (
     <TouchableOpacity
       className="bg-white rounded-xl mx-3 mb-3 overflow-hidden shadow-sm"
-      onPress={() => {
-        Haptics.selectionAsync();
-        router.push(`/item/${item.id}`);
-      }}
+      onPress={() => onPress(item.id!)}
       activeOpacity={0.7}
     >
       <View className="p-3">
         <View className="flex-row items-center">
-          <View className="w-14 h-14 bg-gray-100 rounded-xl items-center justify-center mr-3">
-            {item.image ? (
-              <Image
-                source={item.image}
-                className="w-12 h-12"
-                contentFit="contain"
-              />
-            ) : (
-              <Ionicons name="cube-outline" size={28} color="#6B7280" />
-            )}
-          </View>
-
           <View className="flex-1">
             <Text className="text-base font-medium text-gray-800 font-semibold">
               {item.name}
             </Text>
             <View className="flex-row items-center mt-1">
-              <Ionicons
+              <Icon
                 name="barcode-outline"
                 size={14}
                 color="#9CA3AF"
@@ -124,7 +127,7 @@ const InventoryScreen = () => {
               {item.price.toLocaleString()} ₽
             </Text>
             <View className="flex-row items-center justify-end mt-1">
-              <Ionicons
+              <Icon
                 name="cube-outline"
                 size={14}
                 color="#9CA3AF"
@@ -145,23 +148,17 @@ const InventoryScreen = () => {
           </View>
 
           <View className="flex-row">
-            <TouchableOpacity
-              className="mr-2"
-              onPress={() => {
-                Haptics.selectionAsync();
-                router.push(`/item/${item.id}?edit=true`);
-              }}
-            >
-              <Ionicons name="create-outline" size={20} color="#6B7280" />
+            <TouchableOpacity className="mr-2" onPress={() => onEdit(item.id!)}>
+              <Icon name="create-outline" size={20} color="#6B7280" />
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                confirmDelete(item.id, item.name);
+                onDelete(item.id!, item.name);
               }}
             >
-              <Ionicons name="trash-outline" size={20} color="#EF4444" />
+              <Icon name="trash-outline" size={20} color="#EF4444" />
             </TouchableOpacity>
           </View>
         </View>
@@ -169,33 +166,39 @@ const InventoryScreen = () => {
     </TouchableOpacity>
   );
 
-  const renderStats = () => {
+  const InventoryCard = React.memo(ItemCard);
+
+  const stats = useMemo(() => {
     const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
     const totalValue = items.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0
     );
 
-    return (
-      <View className="flex-row justify-between mx-3 mb-4">
-        <View className="bg-white rounded-xl flex-1 mr-2 p-3 shadow-sm">
-          <Text className="text-gray-500 text-xs">Всего товаров</Text>
-          <Text className="text-2xl font-bold text-primary">{totalItems}</Text>
-        </View>
+    return { totalItems, totalValue };
+  }, [items]);
 
-        <View className="bg-white rounded-xl flex-1 ml-2 p-3 shadow-sm">
-          <Text className="text-gray-500 text-xs">Общая стоимость</Text>
-          <Text className="text-2xl font-bold text-primary">
-            {totalValue.toLocaleString()} ₽
-          </Text>
-        </View>
+  const renderStats = () => (
+    <View className="flex-row justify-between mx-3 mb-4">
+      <View className="bg-white rounded-xl flex-1 mr-2 p-3 shadow-sm">
+        <Text className="text-gray-500 text-xs">Всего товаров</Text>
+        <Text className="text-2xl font-bold text-primary">
+          {stats.totalItems}
+        </Text>
       </View>
-    );
-  };
+
+      <View className="bg-white rounded-xl flex-1 ml-2 p-3 shadow-sm">
+        <Text className="text-gray-500 text-xs">Общая стоимость</Text>
+        <Text className="text-2xl font-bold text-primary">
+          {stats.totalValue.toLocaleString()} ₽
+        </Text>
+      </View>
+    </View>
+  );
 
   const EmptyList = () => (
     <View className="flex-1 justify-center items-center py-10">
-      <Ionicons name="cube-outline" size={64} color="#D1D5DB" />
+      <Icon name="cube-outline" size={64} color="#D1D5DB" />
       <Text className="text-gray-400 text-base mt-4 text-center">
         Список пуст{"\n"}Добавьте товары с помощью кнопки ниже
       </Text>
@@ -232,9 +235,13 @@ const InventoryScreen = () => {
     </View>
   );
 
+  const handleAddItem = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push("/item/create");
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-[#F5F7FA]" edges={["top"]}>
-      {/* Заголовок */}
       <View className="px-4 pt-4 pb-2">
         <Text className="text-2xl font-bold text-gray-800">Инвентаризация</Text>
         <Text className="text-gray-500 mt-1">
@@ -247,8 +254,16 @@ const InventoryScreen = () => {
 
       <FlatList
         data={filteredItems}
-        renderItem={({ item }) => <InventoryCard item={item} />}
-        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <InventoryCard
+            key={item.id || item.$id}
+            item={item}
+            onDelete={confirmDelete}
+            onEdit={handleEdit}
+            onPress={handlePress}
+          />
+        )}
+        keyExtractor={(item) => item.id || item.$id!}
         contentContainerStyle={{
           paddingBottom: 100,
           flex: filteredItems.length ? undefined : 1,
@@ -261,13 +276,10 @@ const InventoryScreen = () => {
 
       <TouchableOpacity
         className="absolute bottom-24 right-5 bg-primary w-14 h-14 rounded-full items-center justify-center shadow-lg"
-        onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          router.push("/item/create");
-        }}
+        onPress={handleAddItem}
         style={{ elevation: 4 }}
       >
-        <Ionicons name="add-outline" size={30} color="white" />
+        <Icon name="add-outline" size={30} color="white" />
       </TouchableOpacity>
     </SafeAreaView>
   );
