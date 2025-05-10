@@ -80,12 +80,10 @@ interface InventoryContextType {
   error: string | null;
 }
 
-// Создание контекста
 const InventoryContext = createContext<InventoryContextType | undefined>(
   undefined
 );
 
-// Провайдер контекста
 export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
@@ -93,7 +91,6 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Загрузка данных из AsyncStorage при монтировании
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -103,7 +100,6 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({
         if (storedItems) {
           setItems(JSON.parse(storedItems));
         } else {
-          // Если данных в хранилище нет, используем начальные данные
           setItems(initialInventoryItems);
           await AsyncStorage.setItem(
             "inventoryItems",
@@ -123,7 +119,6 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({
     loadData();
   }, []);
 
-  // Сохранение данных в AsyncStorage при обновлении
   useEffect(() => {
     const saveData = async () => {
       try {
@@ -143,7 +138,6 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [items, loading]);
 
-  // Добавление нового товара
   const addItem = async (
     item: Omit<InventoryItem, "id" | "lastUpdated">
   ): Promise<InventoryItem> => {
@@ -157,7 +151,6 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({
     return newItem;
   };
 
-  // Обновление существующего товара
   const updateItem = async (
     id: string,
     updates: Partial<InventoryItem>
@@ -183,23 +176,19 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({
     return updatedItem;
   };
 
-  // Удаление товара
   const deleteItem = async (id: string): Promise<boolean> => {
     setItems((prevItems) => prevItems.filter((item) => item.id !== id));
     return true;
   };
 
-  // Получение товара по ID
   const getItemById = (id: string): InventoryItem | undefined => {
     return items.find((item) => item.id === id);
   };
 
-  // Получение товара по штрихкоду
   const getItemByBarcode = (barcode: string): InventoryItem | undefined => {
     return items.find((item) => item.barcode === barcode);
   };
 
-  // Поиск товаров по запросу
   const searchItems = (query: string): InventoryItem[] => {
     const normalizedQuery = query.toLowerCase().trim();
 
@@ -234,7 +223,6 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-// Хук для использования контекста
 export const useInventory = () => {
   const context = useContext(InventoryContext);
 

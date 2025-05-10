@@ -1,5 +1,5 @@
 // app/_layout.tsx
-import { Stack } from "expo-router";
+import { Stack, SplashScreen } from "expo-router";
 import "./global.css";
 import React from "react";
 import { StatusBar } from "react-native";
@@ -13,7 +13,6 @@ import {
   Inter_600SemiBold,
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
-import { SplashScreen } from "expo-router";
 
 SplashScreen.preventAutoHideAsync();
 

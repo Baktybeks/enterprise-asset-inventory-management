@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "movie",
-    "slug": "movie",
+    "name": "inventory",
+    "slug": "inventory",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "movies",
+    "scheme": "inventory",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -17,7 +17,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.baktybeks.movie"
+      "package": "com.baktybeks.inventory"
     },
     "web": {
       "bundler": "metro",
@@ -35,16 +35,18 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-barcode-scanner"
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera",
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone",
+          "recordAudioAndroid": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
     },
-    "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "0eeef83d-d869-46a0-80d1-78c20daa1af7"
-      }
-    }
+    "extra": {}
   }
 }

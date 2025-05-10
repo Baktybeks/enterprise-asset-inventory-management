@@ -13,3 +13,23 @@ export const colors = {
   shadowColor: "#000",
   surface: "transparent",
 };
+
+export const getCategoryColor = (category: string) => {
+  const colors = [
+    "#5B67CA", // primary
+    "#F97316", // orange
+    "#22C55E", // green
+    "#06B6D4", // cyan
+    "#8B5CF6", // violet
+    "#EC4899", // pink
+    "#F43F5E", // rose
+    "#FACC15", // yellow
+  ];
+
+  let hash = 0;
+  for (let i = 0; i < category.length; i++) {
+    hash = category.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  return colors[Math.abs(hash) % colors.length];
+};

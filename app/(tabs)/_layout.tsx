@@ -1,11 +1,10 @@
 // app/(tabs)/_layout.tsx
-import { Tabs } from 'expo-router';
-import React from 'react';
-import { View, Text, StyleProp, ViewStyle } from 'react-native';
-import { BlurView } from 'expo-blur';
-import { Icon, IconAliasName } from '@/constants/ionIcons';
+import { Tabs } from "expo-router";
+import React from "react";
+import { View, Text, StyleProp, ViewStyle } from "react-native";
+import { BlurView } from "expo-blur";
+import { Icon, IconAliasName } from "@/constants/ionIcons";
 
-// Интерфейс для пропсов компонента TabBarIcon
 interface TabBarIconProps {
   name: IconAliasName;
   color: string;
@@ -14,13 +13,19 @@ interface TabBarIconProps {
   title: string;
 }
 
-// Компонент для отображения иконки вкладки
-const TabBarIcon: React.FC<TabBarIconProps> = ({ name, color, size, focused, title }) => {
-  // Создаем контейнер с эффектом выделения для активной вкладки
+const TabBarIcon: React.FC<TabBarIconProps> = ({
+  name,
+  color,
+  size,
+  focused,
+  title,
+}) => {
   if (focused) {
     return (
-      <View className="flex flex-row w-full flex-1 min-w-[112px] min-h-16 mt-4 
-        justify-center items-center rounded-full overflow-hidden bg-primary/20">
+      <View
+        className="flex flex-row w-full flex-1 min-w-[112px] min-h-16 mt-4 
+        justify-center items-center rounded-full overflow-hidden bg-primary/20"
+      >
         <Icon name={name} size={size} color={color} />
         <Text className="text-primary text-base font-semibold ml-2">
           {title}
@@ -28,8 +33,7 @@ const TabBarIcon: React.FC<TabBarIconProps> = ({ name, color, size, focused, tit
       </View>
     );
   }
-  
-  // Простая иконка для неактивной вкладки
+
   return (
     <View className="size-full justify-center items-center mt-4 rounded-full">
       <Icon name={name} size={size} color={color} />
@@ -37,25 +41,23 @@ const TabBarIcon: React.FC<TabBarIconProps> = ({ name, color, size, focused, tit
   );
 };
 
-// Стиль для фона вкладок
-const tabBarBackground: React.FC = () => (
+const tabBarBackground = () => (
   <BlurView
     tint="light"
     intensity={80}
     style={{
-      position: 'absolute',
+      position: "absolute",
       top: 0,
       left: 0,
       right: 0,
       bottom: 0,
       borderRadius: 50,
-      overflow: 'hidden',
+      overflow: "hidden",
     }}
   />
 );
 
-// Компонент layout для вкладок
-const TabsLayout: React.FC = () => {
+const TabsLayout = () => {
   return (
     <Tabs
       screenOptions={{
@@ -88,12 +90,12 @@ const TabsLayout: React.FC = () => {
         options={{
           title: "Инвентарь",
           tabBarIcon: ({ focused, color }) => (
-            <TabBarIcon 
-              focused={focused} 
-              name="package" 
-              color={color} 
-              size={24} 
-              title="Инвентарь" 
+            <TabBarIcon
+              focused={focused}
+              name="package"
+              color={color}
+              size={24}
+              title="Инвентарь"
             />
           ),
         }}
@@ -103,14 +105,15 @@ const TabsLayout: React.FC = () => {
         options={{
           title: "Сканировать",
           tabBarIcon: ({ focused, color }) => (
-            <TabBarIcon 
-              focused={focused} 
-              name="scan" 
-              color={color} 
-              size={24} 
-              title="Сканировать" 
+            <TabBarIcon
+              focused={focused}
+              name="scan"
+              color={color}
+              size={24}
+              title="Сканировать"
             />
           ),
+          tabBarStyle: { display: "none" },
         }}
       />
       <Tabs.Screen
@@ -118,12 +121,12 @@ const TabsLayout: React.FC = () => {
         options={{
           title: "Поиск",
           tabBarIcon: ({ focused, color }) => (
-            <TabBarIcon 
-              focused={focused} 
-              name="search" 
-              color={color} 
-              size={24} 
-              title="Поиск" 
+            <TabBarIcon
+              focused={focused}
+              name="search"
+              color={color}
+              size={24}
+              title="Поиск"
             />
           ),
         }}
@@ -133,12 +136,12 @@ const TabsLayout: React.FC = () => {
         options={{
           title: "Панель",
           tabBarIcon: ({ focused, color }) => (
-            <TabBarIcon 
-              focused={focused} 
-              name="dashboard" 
-              color={color} 
-              size={24} 
-              title="Панель" 
+            <TabBarIcon
+              focused={focused}
+              name="dashboard"
+              color={color}
+              size={24}
+              title="Панель"
             />
           ),
         }}
