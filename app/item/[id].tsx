@@ -578,7 +578,7 @@ const ItemDetailScreen: React.FC = () => {
               />
 
               <TextField
-                label="Цена (₽)"
+                label="Цена (Сом)"
                 value={price}
                 onChangeText={setPrice}
                 placeholder="Введите цену"
@@ -690,14 +690,14 @@ const ItemDetailScreen: React.FC = () => {
             <View className="bg-white rounded-xl p-4 mb-4 shadow-sm">
               <Text className="text-gray-500 mb-2">Цена</Text>
               <Text className="text-gray-800 text-lg font-medium">
-                {item.price.toLocaleString()} ₽
+                {item.price.toLocaleString()} Сом
               </Text>
             </View>
 
             <View className="bg-white rounded-xl p-4 mb-4 shadow-sm">
               <Text className="text-gray-500 mb-2">Общая стоимость</Text>
               <Text className="text-primary text-xl font-bold">
-                {(item.price * item.quantity).toLocaleString()} ₽
+                {(item.price * item.quantity).toLocaleString()} Сом
               </Text>
             </View>
 

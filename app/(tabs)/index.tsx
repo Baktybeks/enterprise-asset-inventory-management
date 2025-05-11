@@ -124,7 +124,7 @@ const InventoryScreen = () => {
 
           <View className="ml-2">
             <Text className="text-primary font-bold text-right text-lg">
-              {item.price.toLocaleString()} ₽
+              {item.price.toLocaleString()} Сом
             </Text>
             <View className="flex-row items-center justify-end mt-1">
               <Icon
@@ -190,7 +190,7 @@ const InventoryScreen = () => {
       <View className="bg-white rounded-xl flex-1 ml-2 p-3 shadow-sm">
         <Text className="text-gray-500 text-xs">Общая стоимость</Text>
         <Text className="text-2xl font-bold text-primary">
-          {stats.totalValue.toLocaleString()} ₽
+          {stats.totalValue.toLocaleString()} Сом
         </Text>
       </View>
     </View>

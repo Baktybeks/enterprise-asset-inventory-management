@@ -114,7 +114,7 @@ const DashboardScreen: React.FC = () => {
         <View className="bg-white rounded-xl mx-4 mt-4 p-4 shadow-sm">
           <Text className="text-gray-500 mb-1">Общая стоимость инвентаря</Text>
           <Text className="text-3xl font-bold text-primary">
-            {totalValue.toLocaleString()} ₽
+            {totalValue.toLocaleString()} Сом
           </Text>
 
           <View className="flex-row mt-3 items-center">
@@ -194,7 +194,7 @@ const DashboardScreen: React.FC = () => {
                       {percentage.toFixed(1)}%
                     </Text>
                     <Text className="text-sm font-medium text-gray-800">
-                      {category.value.toLocaleString()} ₽
+                      {category.value.toLocaleString()} Сом
                     </Text>
                   </View>
                 </TouchableOpacity>
