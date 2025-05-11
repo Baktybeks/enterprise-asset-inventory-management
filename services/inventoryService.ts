@@ -1,18 +1,23 @@
+// services/inventoryService.ts
+import { appwriteConfig } from "@/constants/appwriteConfig";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Client, Databases, ID, Query } from "appwrite";
 
 // Константы для Appwrite
-const DATABASE_ID = process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID || "";
-const COLLECTION_ID = process.env.EXPO_PUBLIC_APPWRITE_COLLECTION_ID || "";
-const PROJECT_ID = process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID || "";
-const ENDPOINT = process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT || "";
+const {
+  databaseId: DATABASE_ID,
+  collectionId: COLLECTION_ID,
+  projectId: PROJECT_ID,
+  endpoint: ENDPOINT,
+} = appwriteConfig;
 
 // Вывод информации о переменных окружения
+
 console.log("===== APPWRITE CONFIG =====");
-console.log(`DATABASE_ID: ${DATABASE_ID}`);
-console.log(`COLLECTION_ID: ${COLLECTION_ID}`);
-console.log(`PROJECT_ID: ${PROJECT_ID}`);
-console.log(`PROJECT_ID: ${ENDPOINT}`);
+console.log(`DATABASE_ID: ${appwriteConfig.databaseId}`);
+console.log(`COLLECTION_ID: ${appwriteConfig.collectionId}`);
+console.log(`PROJECT_ID: ${appwriteConfig.projectId}`);
+console.log(`ENDPONT: ${appwriteConfig.endpoint}`);
 console.log("==========================");
 
 // Инициализация клиента Appwrite
